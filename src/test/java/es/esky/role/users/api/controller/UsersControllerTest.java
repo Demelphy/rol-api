@@ -26,6 +26,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import static es.esky.role.users.domain.builder.UserBuilder.user;
 import static java.util.Arrays.asList;
@@ -42,6 +44,8 @@ public class UsersControllerTest {
 
     private static final User USER_1 = user().withUsername("user1").withPassword("1234").build();
     private static final User USER_2 = user().withUsername("user2").withPassword("1234").build();
+    private static final User USER_3 = user().withUsername("user3").withPassword("1234").build();
+    private static final User USER_4 = null;
     private final static PageRequest REQUEST_PAGE = new PageRequest(0, 10);
 
     @InjectMocks
@@ -60,4 +64,31 @@ public class UsersControllerTest {
         assertThat(page, equalTo(expectedPage));
     }
 
+    @Test
+    public void save_createNewUserWithCorrectData() throws Exception {
+        final ResponseEntity<User> expectedNewUser = new ResponseEntity<>(USER_3, HttpStatus.CREATED);
+        when(usersService.save(USER_3)).thenReturn(USER_3);
+
+        final ResponseEntity<User> newUser = usersController.save(USER_3);
+
+        assertThat(newUser, equalTo(expectedNewUser));
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void save_userNull() throws Exception {
+        final IllegalArgumentException exception = new IllegalArgumentException();
+        when(usersService.save(USER_4)).thenThrow(exception);
+
+        usersController.save(USER_4);
+    }
+
+
+    @Test(expected = IllegalArgumentException.class)
+    public void save_userNullParameters() throws Exception {
+        User user = new User();
+        final IllegalArgumentException exception = new IllegalArgumentException();
+        when(usersService.save(user)).thenThrow(exception);
+
+        usersController.save(user);
+    }
 }
